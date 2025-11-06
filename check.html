@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPN Block Page</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 2em; }
+  #blocked { display: none; color: red; font-size: 2em; }
+  #content { display: none; }
+</style>
+</head>
+<body>
+
+<div id="blocked">No VPN</div>
+<div id="content">
+  <h1>Welcome!</h1>
+  <p>You are allowed to view this page.</p>
+</div>
+
+<script>
+async function loadCSV(url) {
+  const resp = await fetch(url);
+  const text = await resp.text();
+  // split lines and trim
+  return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+}
+
+async function getIP() {
+  const resp = await fetch('https://api.ipify.org?format=json');
+  const data = await resp.json();
+  return data.ip;
+}
+
+async function checkVPN() {
+  try {
+    // Load CSV of blocked IPs (one IP per line, or CSV with first column)
+    const blockedIPs = await loadCSV('protonvpn_ips.txt'); // or .csv
+    const myIP = await getIP();
+    console.log('Your IP:', myIP);
+
+    if (blockedIPs.includes(myIP)) {
+      document.getElementById('blocked').style.display = 'block';
+    } else {
+      document.getElementById('content').style.display = 'block';
+    }
+  } catch (e) {
+    console.error('Error checking VPN:', e);
+    document.getElementById('content').style.display = 'block';
+  }
+}
+
+checkVPN();
+</script>
+
+</body>
+</html>
